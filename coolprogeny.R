@@ -17,16 +17,27 @@ event_urls <- html_nodes(site, ".post-content a") %>%
     html_attr("href")
 mult_events <- function(event_urls) {
     # urls (as character vector)
-    df <- data.frame(lapply(event_urls, event_info))
+    df <- data.frame(do.call(rbind, lapply(event_urls, event_info)), 
+                     stringsAsFactors = FALSE)
+    df
 }
 
 event_info <- function(url) {
     x <- read_html(url)
-    details <- html_nodes(x, ".tribe-events-single-event-title, .dtstart,
-                        .tribe-events-event-cost, .tribe-venue a,
-                        .tribe-events-event-url a") %>%
-        html_text() %>%
+    title <- html_nodes(x,".tribe-events-single-event-title") %>% html_text()
+    datetime <- html_nodes(x, ".dtstart") %>% html_text()
+        if(length(datetime) < 2) datetime <- c(datetime, NA)
+    cost <- html_nodes(x, ".tribe-events-event-cost") %>% html_text() %>%
+        ifelse(is.null(.), NA, .)
+    venue <- html_nodes(x, ".tribe-venue a") %>% html_text() %>%
+        ifelse(is.null(.), NA, .)
+    event_url <- html_nodes(x, ".tribe-events-event-url a") %>% html_text() %>%
+        ifelse(is.null(.), NA, .)
+
+    details <- c(title, datetime, cost, venue, event_url) %>%
         gsub("^ *|\n|[$]|\t| *$", "", .)
+    names(details) <- c("title", "date", "time", "cost", "venue", "url")
+    
     details
 }
 
