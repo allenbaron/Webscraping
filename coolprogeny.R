@@ -2,6 +2,7 @@
 
 library(rvest)
 library(magrittr)
+library(reshape2)
 
 # for more general search of website (e.g. "monthly 30 things to do articles")
 #site <- "http://coolprogeny.com/out-about/"
@@ -10,14 +11,28 @@ library(magrittr)
 #    html_attr("src")
 
 # scrape activities and details for March
-address <- "http://coolprogeny.com/2017/02/30-things-to-do-with-kids-in-baltimore-this-march/"
-site <- read_html(address)
-events <- html_nodes(site, "em:nth-child(2) , em:nth-child(3), strong") %>%
-    html_text() # titles, dates, times, location
-n <- length(events)
-events_df <- data.frame(event = events[c(TRUE, FALSE)], temp = events[c(FALSE, TRUE)])
-event_sites <- html_nodes(site, ".post-content a") %>%
+url <- "http://coolprogeny.com/2017/02/30-things-to-do-with-kids-in-baltimore-this-march/"
+start_site <- read_html(url)
+event_urls <- html_nodes(site, ".post-content a") %>%
     html_attr("href")
+mult_events <- function(event_urls) {
+    # urls (as character vector)
+    df <- data.frame(lapply(event_urls, event_info))
+}
 
-x <- 
-".tribe-events-event-cost"
+event_info <- function(url) {
+    x <- read_html(url)
+    details <- html_nodes(x, ".tribe-events-single-event-title, .dtstart,
+                        .tribe-events-event-cost, .tribe-venue a,
+                        .tribe-events-event-url a") %>%
+        html_text() %>%
+        gsub("^ *|\n|[$]|\t| *$", "", .)
+    details
+}
+
+
+# scraping directly from "monthly 30 things to do articles" (lacks COST)
+#events <- html_nodes(site, "em:nth-child(2) , em:nth-child(3), strong") %>%
+#    html_text() # titles, dates, times, location
+#temp <- events[c(FALSE, TRUE)] %>%
+#    colsplit(" ?\\| ?" , c("date", "time", "location"))
