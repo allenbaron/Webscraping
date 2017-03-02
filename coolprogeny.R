@@ -15,11 +15,10 @@ url <- "http://coolprogeny.com/2017/02/30-things-to-do-with-kids-in-baltimore-th
 start_site <- read_html(url)
 event_urls <- html_nodes(site, ".post-content a") %>%
     html_attr("href")
+
 mult_events <- function(event_urls) {
     # urls (as character vector)
-    df <- data.frame(do.call(rbind, lapply(event_urls, event_info)), 
-                     stringsAsFactors = FALSE)
-    df
+    do.call(rbind, lapply(event_urls, event_info)))
 }
 
 event_info <- function(url) {
@@ -34,13 +33,13 @@ event_info <- function(url) {
     event_url <- html_nodes(x, ".tribe-events-event-url a") %>% html_text() %>%
         ifelse(is.null(.), NA, .)
 
-    details <- c(title, datetime, cost, venue, event_url) %>%
+    info <- c(title, datetime, cost, venue, event_url) %>%
         gsub("^ *|\n|[$]|\t| *$", "", .)
-    names(details) <- c("title", "date", "time", "cost", "venue", "url")
     
-    details
+    data.frame(title = info[1], date = info[2], time = info[3],
+                     cost = as.numeric(info[4]), venu = info[5], url = info[6],
+                     stringsAsFactors = FALSE)
 }
-
 
 # scraping directly from "monthly 30 things to do articles" (lacks COST)
 #events <- html_nodes(site, "em:nth-child(2) , em:nth-child(3), strong") %>%
